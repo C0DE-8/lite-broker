@@ -107,6 +107,7 @@
   display: grid;
   gap: 18px;
 }
+.settingsHint { color: var(--muted); font-size: 12px; line-height: 1.6; margin: -10px 0 20px; }
 .walletActions {
   display: flex;
   align-items: center;

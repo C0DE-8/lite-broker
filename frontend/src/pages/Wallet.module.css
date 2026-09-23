@@ -99,6 +99,24 @@
   color: var(--muted);
   margin: 0;
 }
+.pinField { position: relative; }
+.pinHelp {
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  margin-left: 5px;
+  border: 0;
+  background: transparent;
+  color: var(--mint);
+  vertical-align: middle;
+  cursor: pointer;
+}
+.pinHelp svg { width: 14px; height: 14px; }
+.pinInfo { display: grid; gap: 18px; color: var(--muted); font-size: 12px; line-height: 1.7; }
+.pinInfo > p { margin: 0; }
+.pinInfo > div { display: flex; justify-content: space-between; align-items: center; padding: 16px; border: 1px solid var(--line); border-radius: 8px; }
+.pinInfo strong { color: var(--mint); font-size: 18px; font-weight: 500; }
+.managerMessage { padding: 16px; background: #b3f6aa08; border-left: 2px solid var(--mint); white-space: pre-wrap; }
 .address small {
   font-size: 10px;
   color: var(--mint);

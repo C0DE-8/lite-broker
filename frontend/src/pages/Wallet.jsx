@@ -2,20 +2,23 @@ import AssetBalances from "../components/AssetBalances";
 import { assets } from "../constants/assets";
 import { money } from "../utils/format";
 import { useState } from "react";
-import { FiCopy, FiArrowDownLeft, FiArrowUpRight } from "react-icons/fi";
+import { FiCopy, FiArrowDownLeft, FiArrowUpRight, FiHelpCircle } from "react-icons/fi";
 import { useApi } from "../hooks/useApi";
 import { Heading, Status, Empty, Field, Button } from "../components/UI";
 import ActionForm from "../components/ActionForm";
+import Dialog from "../components/Dialog";
 import s from "./Wallet.module.css";
 export default function Wallet() {
   const [tab, setTab] = useState("deposit"),
     [asset, setAsset] = useState(""),
     [method, setMethod] = useState("crypto"),
-    [copied, setCopied] = useState("");
+    [copied, setCopied] = useState(""),
+    [showPinInfo, setShowPinInfo] = useState(false);
   const wallets = useApi("/wallet-addresses"),
     balance = useApi("/balances"),
     deposits = useApi("/deposits"),
-    withdrawals = useApi("/withdrawals");
+    withdrawals = useApi("/withdrawals"),
+    pinInfo = useApi("/withdrawal-pin-info");
   const chosen = wallets.data?.wallets.find((w) => w.asset === asset);
   const currencySymbol = balance.data?.balances.currency_symbol || "$";
   const history = tab === "deposit" ? deposits : withdrawals;
@@ -247,21 +250,31 @@ export default function Wallet() {
                   <Field label="Bank country" name="bank_country" required />
                 </>
               )}
-              <Field
-                label="Withdrawal PIN"
-                name="pin"
-                type="password"
-                inputMode="numeric"
-                pattern="[0-9]{4,6}"
-                minLength={4}
-                maxLength={6}
-                required
-                autoComplete="off"
-              />
-              <p className={s.note}>
-                Use the withdrawal PIN assigned to your account. Contact the
-                platform administrator if you haven’t received one.
-              </p>
+              <div className={s.pinField}>
+                <Field
+                  label={
+                    <>
+                      Withdrawal PIN
+                      <button
+                        className={s.pinHelp}
+                        type="button"
+                        onClick={() => setShowPinInfo(true)}
+                        aria-label="About the withdrawal PIN"
+                      >
+                        <FiHelpCircle />
+                      </button>
+                    </>
+                  }
+                  name="pin"
+                  type="password"
+                  inputMode="numeric"
+                  pattern="[0-9]{4,6}"
+                  minLength={4}
+                  maxLength={6}
+                  required
+                  autoComplete="off"
+                />
+              </div>
             </ActionForm>
           )}
         </section>
@@ -302,6 +315,36 @@ export default function Wallet() {
             ))}
         </section>
       </div>
+      {showPinInfo && (
+        <Dialog
+          title="Withdrawal PIN information"
+          onClose={() => setShowPinInfo(false)}
+        >
+          <div className={s.pinInfo}>
+            <p>
+              Your account manager is responsible for providing your withdrawal
+              PIN. If you already have a PIN, close this message and enter it to
+              withdraw as normal.
+            </p>
+            <Status {...pinInfo} retry={pinInfo.reload} />
+            {pinInfo.data && (
+              <>
+                <div>
+                  <span>PIN fee</span>
+                  <strong>
+                    {money(pinInfo.data.pin_info.fee, currencySymbol)}
+                  </strong>
+                </div>
+                {pinInfo.data.pin_info.message && (
+                  <p className={s.managerMessage}>
+                    {pinInfo.data.pin_info.message}
+                  </p>
+                )}
+              </>
+            )}
+          </div>
+        </Dialog>
+      )}
     </>
   );
 }

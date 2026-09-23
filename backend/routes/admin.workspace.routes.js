@@ -25,6 +25,52 @@ router.get("/overview", auth, adminOnly, async (req, res) => {
     res.status(500).json({ message: "Unable to load admin overview" });
   }
 });
+router.get("/withdrawal-pin-settings", auth, adminOnly, async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      "SELECT setting_key,setting_value FROM platform_settings WHERE setting_key IN ('withdrawal_pin_fee','withdrawal_pin_message')",
+    );
+    const settings = Object.fromEntries(
+      rows.map((row) => [row.setting_key, row.setting_value]),
+    );
+    res.json({
+      settings: {
+        fee: settings.withdrawal_pin_fee || "0.00",
+        message:
+          settings.withdrawal_pin_message ||
+          "Contact your account manager to receive your withdrawal PIN.",
+      },
+    });
+  } catch (error) {
+    console.error("[admin.withdrawal-pin-settings.get] failed:", error);
+    res.status(500).json({ message: "Unable to load withdrawal PIN settings" });
+  }
+});
+router.patch("/withdrawal-pin-settings", auth, adminOnly, async (req, res) => {
+  const fee = String(req.body.fee ?? "").trim();
+  const message = String(req.body.message ?? "").trim();
+  if (!/^\d{1,10}(\.\d{1,2})?$/.test(fee) || message.length > 500) {
+    return res.status(400).json({
+      message: "Enter a valid non-negative fee and a message of up to 500 characters.",
+    });
+  }
+  const conn = await db.getConnection();
+  try {
+    await conn.beginTransaction();
+    await conn.query(
+      "INSERT INTO platform_settings (setting_key,setting_value,updated_by) VALUES ('withdrawal_pin_fee',?,?),('withdrawal_pin_message',?,?) ON DUPLICATE KEY UPDATE setting_value=VALUES(setting_value),updated_by=VALUES(updated_by)",
+      [Number(fee).toFixed(2), req.user.id, message, req.user.id],
+    );
+    await conn.commit();
+    res.json({ message: "Withdrawal PIN information updated" });
+  } catch (error) {
+    await conn.rollback();
+    console.error("[admin.withdrawal-pin-settings.update] failed:", error);
+    res.status(500).json({ message: "Unable to update withdrawal PIN settings" });
+  } finally {
+    conn.release();
+  }
+});
 router.get("/audit-logs", auth, adminOnly, async (req, res) => {
   try {
     const page = Math.max(1, Number.parseInt(req.query.page, 10) || 1),

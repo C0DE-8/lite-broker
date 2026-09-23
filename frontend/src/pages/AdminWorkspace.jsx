@@ -105,11 +105,14 @@ function AdminProfile() {
 }
 function WalletAddresses() {
   const wallets = useApi("/wallet-addresses", adminApi);
+  const pinSettings = useApi("/withdrawal-pin-settings", adminApi);
   const [editing, setEditing] = useState(null);
   const [qrWallet, setQrWallet] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [pinError, setPinError] = useState("");
+  const [pinMessage, setPinMessage] = useState("");
 
   async function submit(e) {
     e.preventDefault();
@@ -149,12 +152,43 @@ function WalletAddresses() {
     }
   }
 
+  async function savePinSettings(e) {
+    e.preventDefault();
+    const form = e.currentTarget;
+    setBusy(true);
+    setPinError("");
+    setPinMessage("");
+    try {
+      const result = await adminApi.patch("/withdrawal-pin-settings", Object.fromEntries(new FormData(form)));
+      setPinMessage(result.message);
+      pinSettings.reload();
+    } catch (err) {
+      setPinError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <>
-      <Heading eyebrow="PAYMENT SETTINGS" title="Wallet addresses.">
-        Keep the deposit destinations shown to investors accurate and current.
+      <Heading eyebrow="PAYMENT SETTINGS" title="Payment settings.">
+        Manage deposit destinations and the withdrawal PIN information shown to investors.
       </Heading>
       <div className={s.walletLayout}>
+        <section className={s.panel}>
+          <h3>Withdrawal PIN information</h3>
+          <p className={s.settingsHint}>This fee and message appear when an investor clicks the help icon beside Withdrawal PIN.</p>
+          <Status {...pinSettings} retry={pinSettings.reload} />
+          {pinSettings.data && (
+            <form className={s.walletForm} onSubmit={savePinSettings}>
+              <Field label="PIN fee (USD)" name="fee" type="number" min="0" step="0.01" defaultValue={pinSettings.data.settings.fee} required />
+              <Field label="Message for investors (optional)" name="message" as="textarea" rows="4" maxLength="500" defaultValue={pinSettings.data.settings.message} />
+              <Button type="submit" disabled={busy}>{busy ? "Saving…" : "Save PIN information"}</Button>
+            </form>
+          )}
+          {pinError && <p className={s.formError} role="alert">{pinError}</p>}
+          {pinMessage && <p className={s.formSuccess} role="status">{pinMessage}</p>}
+        </section>
         <section className={s.panel}>
           <h3>{editing ? `Edit ${editing.asset} address` : "Add wallet address"}</h3>
           <form className={s.walletForm} onSubmit={submit}>
