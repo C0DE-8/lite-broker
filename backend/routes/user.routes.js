@@ -8,6 +8,7 @@ const { sendLoginAlertEmail } = require("../utils/mailer");
 const moment = require("moment");
 const { kycUpload } = require("../middleware/kycUpload");
 const { upsUpload } = require("../middleware/ups-upload");
+const { getWithdrawalPinSettings } = require("../utils/platformSettings");
 
 
 const router = express.Router();
@@ -1039,20 +1040,7 @@ router.get("/deposits/:id", auth, async (req, res) => {
 
 router.get("/withdrawal-pin-info", auth, async (req, res) => {
   try {
-    const [rows] = await db.query(
-      "SELECT setting_key,setting_value FROM platform_settings WHERE setting_key IN ('withdrawal_pin_fee','withdrawal_pin_message')",
-    );
-    const settings = Object.fromEntries(
-      rows.map((row) => [row.setting_key, row.setting_value]),
-    );
-    res.json({
-      pin_info: {
-        fee: settings.withdrawal_pin_fee || "0.00",
-        message:
-          settings.withdrawal_pin_message ||
-          "Contact your account manager to receive your withdrawal PIN.",
-      },
-    });
+    res.json({ pin_info: await getWithdrawalPinSettings(pool) });
   } catch (error) {
     console.error("[withdrawal-pin-info.get] failed:", error);
     res.status(500).json({ message: "Unable to load withdrawal PIN information" });

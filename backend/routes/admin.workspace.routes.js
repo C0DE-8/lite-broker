@@ -2,6 +2,10 @@ const router = require("express").Router();
 const db = require("../db");
 const auth = require("../middleware/auth");
 const adminOnly = require("../middleware/adminOnly");
+const {
+  ensurePlatformSettings,
+  getWithdrawalPinSettings,
+} = require("../utils/platformSettings");
 router.get("/me", auth, adminOnly, async (req, res) => {
   try {
     const [rows] = await db.query(
@@ -27,20 +31,7 @@ router.get("/overview", auth, adminOnly, async (req, res) => {
 });
 router.get("/withdrawal-pin-settings", auth, adminOnly, async (req, res) => {
   try {
-    const [rows] = await db.query(
-      "SELECT setting_key,setting_value FROM platform_settings WHERE setting_key IN ('withdrawal_pin_fee','withdrawal_pin_message')",
-    );
-    const settings = Object.fromEntries(
-      rows.map((row) => [row.setting_key, row.setting_value]),
-    );
-    res.json({
-      settings: {
-        fee: settings.withdrawal_pin_fee || "0.00",
-        message:
-          settings.withdrawal_pin_message ||
-          "Contact your account manager to receive your withdrawal PIN.",
-      },
-    });
+    res.json({ settings: await getWithdrawalPinSettings(db) });
   } catch (error) {
     console.error("[admin.withdrawal-pin-settings.get] failed:", error);
     res.status(500).json({ message: "Unable to load withdrawal PIN settings" });
@@ -56,6 +47,7 @@ router.patch("/withdrawal-pin-settings", auth, adminOnly, async (req, res) => {
   }
   const conn = await db.getConnection();
   try {
+    await ensurePlatformSettings(conn);
     await conn.beginTransaction();
     await conn.query(
       "INSERT INTO platform_settings (setting_key,setting_value,updated_by) VALUES ('withdrawal_pin_fee',?,?),('withdrawal_pin_message',?,?) ON DUPLICATE KEY UPDATE setting_value=VALUES(setting_value),updated_by=VALUES(updated_by)",
