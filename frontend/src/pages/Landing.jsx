@@ -13,6 +13,9 @@ import {
   FiCheck,
   FiPause,
   FiPlay,
+  FiUserCheck,
+  FiClock,
+  FiFileText,
 } from "react-icons/fi";
 import { SiBitcoin, SiEthereum } from "react-icons/si";
 import { Brand, Button, ArrowLink } from "../components/UI";
@@ -20,8 +23,11 @@ import s from "./Landing.module.css";
 import HeroMarketCard from "../components/HeroMarketCard";
 import TradingViewMarkets from "../components/TradingViewMarkets";
 import SitePreloader from "../components/SitePreloader";
+import DemoActivityToast from "../components/DemoActivityToast";
+import { session } from "../api/client";
 import { CoinTicker, TradingRoutes, BitcoinNews, MiningSection, CommunitySection } from "../components/LandingExtras";
 export default function Landing() {
+  const loggedIn = Boolean(session.get());
   const [menu, setMenu] = useState(false);
   const [motionPaused, setMotionPaused] = useState(false);
   const [ready, setReady] = useState(false);
@@ -29,6 +35,7 @@ export default function Landing() {
     <>
       {!ready && <SitePreloader onReady={setReady} />}
       <div className={s.page} inert={!ready}>
+        {ready && <DemoActivityToast />}
         <div className={s.announcement}>
           <span className={s.liveDot} /> A new perspective on investing.{" "}
           <Link to="/register">
@@ -54,10 +61,18 @@ export default function Landing() {
             </a>
           </nav>
           <div className={s.navActions}>
-            <Link to="/login">Log in</Link>
-            <Button to="/register">
-              Get started <FiArrowUpRight />
-            </Button>
+            {loggedIn ? (
+              <Button to="/app">
+                Dashboard <FiArrowUpRight />
+              </Button>
+            ) : (
+              <>
+                <Link to="/login">Log in</Link>
+                <Button to="/register">
+                  Get started <FiArrowUpRight />
+                </Button>
+              </>
+            )}
             <button
               className={s.menuButton}
               onClick={() => setMenu(!menu)}
@@ -140,6 +155,53 @@ export default function Landing() {
             </div>
           </section>
           <CoinTicker />
+          <section className={`${s.section} ${s.confidence}`}>
+            <div className={s.sectionHeading}>
+              <div>
+                <span className={s.eyebrow}>BUILT FOR EVERY STEP</span>
+                <h2>
+                  More visibility.
+                  <br />Less guesswork.
+                </h2>
+              </div>
+              <p>
+                From account setup to every submitted request,
+                <br />your workspace keeps the important details together.
+              </p>
+            </div>
+            <div className={s.confidenceCards}>
+              <article>
+                <span className={s.confidenceNumber}>01</span>
+                <div className={s.confidenceIcon}><FiUserCheck /></div>
+                <h3>Account review</h3>
+                <p>
+                  Complete your profile and identity details in one place, then
+                  follow the review status from your account.
+                </p>
+                <Link to="/register">Set up your account <FiArrowUpRight /></Link>
+              </article>
+              <article>
+                <span className={s.confidenceNumber}>02</span>
+                <div className={s.confidenceIcon}><FiClock /></div>
+                <h3>Request tracking</h3>
+                <p>
+                  See deposit and withdrawal requests with their current status
+                  and submission date inside your wallet.
+                </p>
+                <Link to="/preview">Preview the workspace <FiArrowUpRight /></Link>
+              </article>
+              <article>
+                <span className={s.confidenceNumber}>03</span>
+                <div className={s.confidenceIcon}><FiFileText /></div>
+                <h3>Clear account records</h3>
+                <p>
+                  Keep balances, investments, and activity history organized in
+                  a dashboard designed for easy review.
+                </p>
+                <Link to="/register">Start exploring <FiArrowUpRight /></Link>
+              </article>
+            </div>
+          </section>
           <section className={s.section} id="possibilities">
             <div className={s.sectionHeading}>
               <div>
