@@ -259,6 +259,17 @@ router.patch("/profile", auth, adminOnly, async (req, res) => {
 // -------------------------- Get All Users (admin only) ------------------------ //
 router.get("/users", auth, adminOnly, async (req, res) => {
   try {
+    const status = String(req.query.status || "all").trim().toLowerCase();
+    if (!["all", "pending", "approved", "declined"].includes(status)) {
+      return res.status(400).json({ message: "Invalid user status filter" });
+    }
+    const statusWhere = status === "pending"
+      ? "WHERE is_verified = 0"
+      : status === "approved"
+        ? "WHERE is_verified = 1"
+        : status === "declined"
+          ? "WHERE account_status = 'declined'"
+          : "";
     const [users] = await pool.query(
       `
       SELECT
@@ -285,6 +296,7 @@ router.get("/users", auth, adminOnly, async (req, res) => {
         trading_status,
         created_at
       FROM users
+      ${statusWhere}
       ORDER BY created_at DESC
       `
     );
@@ -309,6 +321,38 @@ router.get("/users", auth, adminOnly, async (req, res) => {
       count: usersWithBalances.length,
       users: usersWithBalances,
     });
+  } catch (err) {
+    return res.status(500).json({ message: "Server error", error: String(err) });
+  }
+});
+
+router.post("/users/:id/approve", auth, adminOnly, async (req, res) => {
+  try {
+    const userId = Number(req.params.id);
+    const adminNote = req.body?.admin_note ? String(req.body.admin_note).trim() : null;
+    if (!Number.isInteger(userId) || userId <= 0) return res.status(400).json({ message: "Invalid user id" });
+    const [result] = await pool.query(
+      "UPDATE users SET is_verified=1, account_status='active' WHERE id=? AND role='user'",
+      [userId],
+    );
+    if (!result.affectedRows) return res.status(404).json({ message: "User not found" });
+    return res.json({ message: "User approved", user_id: userId, admin_note: adminNote });
+  } catch (err) {
+    return res.status(500).json({ message: "Server error", error: String(err) });
+  }
+});
+
+router.post("/users/:id/decline", auth, adminOnly, async (req, res) => {
+  try {
+    const userId = Number(req.params.id);
+    const adminNote = req.body?.admin_note ? String(req.body.admin_note).trim() : "Declined";
+    if (!Number.isInteger(userId) || userId <= 0) return res.status(400).json({ message: "Invalid user id" });
+    const [result] = await pool.query(
+      "UPDATE users SET is_verified=0, account_status='declined' WHERE id=? AND role='user'",
+      [userId],
+    );
+    if (!result.affectedRows) return res.status(404).json({ message: "User not found" });
+    return res.json({ message: "User declined", user_id: userId, admin_note: adminNote });
   } catch (err) {
     return res.status(500).json({ message: "Server error", error: String(err) });
   }
@@ -861,12 +905,12 @@ router.delete("/wallet-addresses/:id", auth, adminOnly, async (req, res) => {
 router.get("/deposits", auth, adminOnly, async (req, res) => {
   try {
     const status = req.query.status ? String(req.query.status).trim().toLowerCase() : null;
-    const allowedStatus = new Set(["pending", "approved", "declined"]);
+    const allowedStatus = new Set(["all", "pending", "approved", "declined"]);
 
     const where = [];
     const vals = [];
 
-    if (status) {
+    if (status && status !== "all") {
       if (!allowedStatus.has(status)) {
         return res.status(400).json({ message: "Invalid status filter" });
       }

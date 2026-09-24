@@ -90,6 +90,11 @@ router.get("/conversions", auth, async (req, res) => {
     res.json({ conversions });
   } catch (error) {
     console.error("[conversions.list]", error);
+    if (error.code === "ER_NO_SUCH_TABLE") {
+      return res.status(503).json({
+        message: "Conversion history is unavailable until the crypto conversion migration is applied.",
+      });
+    }
     res.status(500).json({ message: "Unable to load conversion history" });
   }
 });

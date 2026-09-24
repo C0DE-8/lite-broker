@@ -593,6 +593,7 @@ function Approvals() {
       </Heading>
       <div className={s.tabs}>
         {[
+          ["users", "Users"],
           ["deposits", "Deposits"],
           ["withdrawals", "Withdrawals"],
           ["kyc", "Identity verification"],
@@ -612,9 +613,10 @@ function Approvals() {
 }
 function Queue({ type }) {
   const [page, setPage] = useState(1),
+    [status, setStatus] = useState("pending"),
     [selected, setSelected] = useState(null);
   const result = useApi(
-    `/${type}?status=pending&page=${page}&limit=20`,
+    `/${type}?status=${status}&page=${page}&limit=20`,
     adminApi,
   );
   const rows = result.data?.[type === "kyc" ? "kyc_list" : type] || [];
@@ -623,6 +625,24 @@ function Queue({ type }) {
       <Status {...result} retry={result.reload} />
       {result.data && (
         <section className={s.panel}>
+          <div className={s.queueControls}>
+            <Field
+              label="Request status"
+              name="status"
+              as="select"
+              value={status}
+              onChange={(event) => {
+                setStatus(event.target.value);
+                setPage(1);
+                setSelected(null);
+              }}
+            >
+              <option value="pending">Pending review</option>
+              <option value="approved">Approved</option>
+              <option value="declined">Declined</option>
+              <option value="all">All requests</option>
+            </Field>
+          </div>
           {rows.length ? (
             <div className={s.table}>
               <table>
@@ -630,7 +650,7 @@ function Queue({ type }) {
                   <tr>
                     <th>Request</th>
                     <th>Investor</th>
-                    <th>{type === "kyc" ? "Submitted" : "Amount"}</th>
+                    <th>{type === "kyc" ? "Submitted" : type === "users" ? "Registered" : "Amount"}</th>
                     <th>Details</th>
                     <th />
                   </tr>
@@ -643,9 +663,11 @@ function Queue({ type }) {
                       <td>
                         {type === "kyc"
                           ? new Date(r.created_at).toLocaleDateString()
+                          : type === "users"
+                            ? new Date(r.created_at).toLocaleDateString()
                           : money(r.amount)}
                       </td>
-                      <td>{r.asset || r.method || "Identity documents"}</td>
+                      <td>{r.asset || r.method || (type === "users" ? r.account_status : "Identity documents")}</td>
                       <td>
                         <Button secondary onClick={() => setSelected(r)}>
                           Review request
@@ -680,7 +702,9 @@ function Queue({ type }) {
             label="Approve request"
             review
             reviewText={
-              type === "deposits"
+              type === "users"
+                ? "Approval allows this user to sign in to the investor workspace."
+                : type === "deposits"
                 ? "Approval credits this deposit to the investor’s account."
                 : type === "withdrawals"
                   ? "Only approve after completing the payout through your payment process."
