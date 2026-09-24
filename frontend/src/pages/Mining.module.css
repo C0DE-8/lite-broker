@@ -1,0 +1,22 @@
+.summary { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; margin:24px 0; }
+.summary > div,.card,.panel { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:22px; min-width:0; }
+.summary span,.card p,.panel p,.transactions small { color:var(--muted); font-size:11px; }
+.summary strong { display:block; margin-top:9px; font-size:25px; font-weight:500; }
+.levels,.miners { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:15px; margin:22px 0; }
+.card > span { color:var(--mint); font-size:9px; letter-spacing:1px; }
+.card h2 { margin:12px 0; font-size:20px; font-weight:500; }
+.card h3 { font-size:26px; font-weight:500; margin:12px 0; }
+.card p { line-height:1.6; }
+.card dl { margin:16px 0; }
+.card dl > div { display:flex; justify-content:space-between; gap:10px; padding:10px 0; border-top:1px solid var(--line); font-size:11px; }
+.card dt { color:var(--muted); }.card dd { margin:0; }
+.card button { width:100%; }
+.panel { margin:22px 0; }
+.minerHead { display:flex; justify-content:space-between; gap:12px; align-items:center; }
+.minerHead h3 { margin:0; font-weight:500; }
+.actions { display:flex; gap:9px; flex-wrap:wrap; margin-top:15px; }
+.actions button { width:auto; }
+.transfer { display:grid; grid-template-columns:1fr 1fr auto; gap:14px; align-items:end; }
+.transactions { overflow:auto; }
+.error { color:#f29288; font-size:12px; }.success { color:var(--mint); font-size:12px; }
+@media(max-width:650px) { .summary { grid-template-columns:1fr; }.transfer { grid-template-columns:1fr; } }

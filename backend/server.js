@@ -222,6 +222,7 @@ app.get(["/health", "/api/health", "/api/debug/health"], async (req, res) => {
    ========================================================= */
 app.use("/api/admin", require("./middleware/adminAudit"), require("./routes/admin.workspace.routes"), adminAuthRoutes);
 app.use("/api/users", require("./routes/binary.routes"), userRoutes);
+app.use("/api/mining", require("./routes/mining.routes"));
 app.use("/api/markets", require("./routes/market.routes"));
 
 /* =========================================================

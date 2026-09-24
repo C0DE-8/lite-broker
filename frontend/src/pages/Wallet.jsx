@@ -69,10 +69,14 @@ export default function Wallet() {
             <span>Profit balance · {currencySymbol}</span>
             <strong>{money(balance.data.balances.profit_balance, currencySymbol)}</strong>
           </div>
-          <div>
-            <span>Investment balance · {currencySymbol}</span>
-            <strong>{money(balance.data.balances.investment_balance, currencySymbol)}</strong>
-          </div>
+            <div>
+              <span>Investment balance · {currencySymbol}</span>
+              <strong>{money(balance.data.balances.investment_balance, currencySymbol)}</strong>
+            </div>
+            <div>
+              <span>Mining balance · {currencySymbol}</span>
+              <strong>{money(balance.data.balances.mining_balance || 0, currencySymbol)}</strong>
+            </div>
           <div>
             <span>Reserved for withdrawals · {currencySymbol}</span>
             <strong>{money(balance.data.balances.withdraw_hold || 0, currencySymbol)}</strong>

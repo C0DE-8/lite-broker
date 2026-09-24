@@ -14,6 +14,7 @@ import {
   FiX,
   FiArrowUpRight,
   FiTrendingUp,
+  FiCpu,
 } from "react-icons/fi";
 import { Brand, Button } from "./UI";
 import { session } from "../api/client";
@@ -22,6 +23,7 @@ import s from "./AppLayout.module.css";
 const links = [
   ["/app", "Overview", FiGrid],
   ["/app/investments", "Investments", FiLayers],
+  ["/app/mining", "Mining", FiCpu],
   ["/app/wallet", "Wallet", FiCreditCard],
   ["/app/trading", "Trading", FiActivity],
   ["/app/copy-trading", "Copy trading", FiUsers],
@@ -32,6 +34,7 @@ const adminLinks = [
   ["/admin/users", "Investors", FiUsers],
   ["/admin/plans", "Investment plans", FiLayers],
   ["/admin/investments", "Investments", FiTrendingUp],
+  ["/admin/mining", "Mining levels", FiCpu],
   ["/admin/wallet-addresses", "Wallet addresses", FiMapPin],
   ["/admin/approvals", "Review requests", FiCreditCard],
   ["/admin/activity", "Activity logs", FiActivity],

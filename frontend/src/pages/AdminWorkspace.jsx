@@ -24,6 +24,8 @@ export default function AdminWorkspace({ section }) {
     <InvestmentPlans />
   ) : section === "investments" ? (
     <InvestmentHistory />
+  ) : section === "mining" ? (
+    <MiningAdmin />
   ) : section === "profile" ? (
     <AdminProfile />
   ) : section === "wallet-addresses" ? (
@@ -520,6 +522,65 @@ function InvestmentHistory() {
     <section className={`${s.panel} ${s.historyPanel}`}><h3>Investor investment records</h3><Status {...investments} retry={investments.reload} />
       {investments.data && (investments.data.investments.length ? <div className={s.table}><table><thead><tr><th>Investor</th><th>Plan</th><th>Amount</th><th>Expected total</th><th>Duration</th><th>Status</th><th>Started</th></tr></thead><tbody>{investments.data.investments.map((item) => <tr key={item.id}><td><strong>{item.full_name}</strong><small>{item.email}</small></td><td>{item.plan_name}</td><td>{money(item.amount)}</td><td>{money(item.expected_total)}</td><td>{item.duration_days} days</td><td>{item.status}</td><td>{item.started_at ? new Date(item.started_at).toLocaleDateString() : "—"}</td></tr>)}</tbody></table></div> : <Empty>No investment records yet.</Empty>)}
     </section>
+  </>;
+}
+
+function MiningAdmin() {
+  const levels = useApi("/mining/admin/levels", adminApi);
+  const blankLevel = { name: "", description: "", power_watts: "100", price: "25", hourly_earning: "0.01", battery_hours: "12", battery_price: "2", sort_order: "4", is_active: "1" };
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+  const [busy, setBusy] = useState(false);
+  async function save(e, id) {
+    e.preventDefault(); setBusy(true); setError(""); setMessage("");
+    try { const result = await adminApi.put(`/mining/admin/levels/${id}`, Object.fromEntries(new FormData(e.currentTarget))); setMessage(result.message); levels.reload(); }
+    catch (err) { setError(err.message); } finally { setBusy(false); }
+  }
+  async function createLevel(e) {
+    e.preventDefault(); setBusy(true); setError(""); setMessage("");
+    try { const result = await adminApi.post("/mining/admin/levels", Object.fromEntries(new FormData(e.currentTarget))); setMessage(result.message); e.currentTarget.reset(); levels.reload(); }
+    catch (err) { setError(err.message); } finally { setBusy(false); }
+  }
+  async function deleteLevel(level) {
+    if (!window.confirm(`Delete the ${level.name} level?`)) return;
+    setBusy(true); setError(""); setMessage("");
+    try { const result = await adminApi.delete(`/mining/admin/levels/${level.id}`); setMessage(result.message); levels.reload(); }
+    catch (err) { setError(err.message); } finally { setBusy(false); }
+  }
+  return <>
+    <Heading eyebrow="MINING SETTINGS" title="Mining levels.">Create and manage equipment levels, hourly mining credits, and battery runtime and cost.</Heading>
+    <Status {...levels} retry={levels.reload} />
+    {error && <p className={s.formError} role="alert">{error}</p>}{message && <p className={s.formSuccess} role="status">{message}</p>}
+    <section className={s.panel}>
+      <h3>Add a mining level</h3>
+      <form className={s.miningCreateForm} onSubmit={createLevel}>
+        <Field label="Level name" name="name" maxLength="100" placeholder="e.g. Ultra Miner" required />
+        <Field label="Description" name="description" maxLength="500" placeholder="Short description" />
+        <Field label="Equipment power (W)" name="power_watts" type="number" min="1" step="1" defaultValue={blankLevel.power_watts} required />
+        <Field label="Equipment price (USD)" name="price" type="number" min="0" step="0.01" defaultValue={blankLevel.price} required />
+        <Field label="Mining credit per hour (USD)" name="hourly_earning" type="number" min="0" step="0.0001" defaultValue={blankLevel.hourly_earning} required />
+        <Field label="Battery runtime (hours)" name="battery_hours" type="number" min="1" step="1" defaultValue={blankLevel.battery_hours} required />
+        <Field label="Battery price (USD)" name="battery_price" type="number" min="0" step="0.01" defaultValue={blankLevel.battery_price} required />
+        <Field label="Display order" name="sort_order" type="number" min="1" step="1" defaultValue={blankLevel.sort_order} required />
+        <Field label="Availability" name="is_active" as="select" defaultValue="1"><option value="1">Active</option><option value="0">Inactive</option></Field>
+        <Button type="submit" disabled={busy}>{busy ? "Adding…" : "Add level"}</Button>
+      </form>
+    </section>
+    <div className={s.miningAdminGrid}>{(levels.data?.levels || []).map((level) => <section className={s.panel} key={level.id}><div className={s.miningLevelHeading}><h3>{level.name}</h3><button type="button" disabled={busy} onClick={() => deleteLevel(level)}>Delete</button></div>
+      <form className={s.walletForm} onSubmit={(e) => save(e, level.id)}>
+        <Field label="Level name" name="name" defaultValue={level.name} required />
+        <Field label="Description" name="description" defaultValue={level.description || ""} maxLength="500" />
+        <Field label="Equipment power (W)" name="power_watts" type="number" min="1" step="1" defaultValue={level.power_watts} required />
+        <Field label="Equipment price (USD)" name="price" type="number" min="0" step="0.01" defaultValue={level.price} required />
+        <Field label="Mining credit per hour (USD)" name="hourly_earning" type="number" min="0" step="0.0001" defaultValue={level.hourly_earning} required />
+        <Field label="Battery runtime (hours)" name="battery_hours" type="number" min="1" step="1" defaultValue={level.battery_hours} required />
+        <Field label="Battery price (USD)" name="battery_price" type="number" min="0" step="0.01" defaultValue={level.battery_price} required />
+        <Field label="Display order" name="sort_order" type="number" min="1" step="1" defaultValue={level.sort_order} required />
+        <Field label="Availability" name="is_active" as="select" defaultValue={String(level.is_active ? 1 : 0)}><option value="1">Active</option><option value="0">Inactive</option></Field>
+        <Button type="submit" disabled={busy}>{busy ? "Saving…" : "Save level"}</Button>
+      </form>
+    </section>)}</div>
+    {levels.data && levels.data.levels.length === 0 && <Empty>No mining levels exist in the database.</Empty>}
   </>;
 }
 

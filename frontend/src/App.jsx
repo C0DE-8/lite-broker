@@ -16,6 +16,7 @@ import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Investments from "./pages/Investments";
+import Mining from "./pages/Mining";
 import Wallet from "./pages/Wallet";
 import Trading from "./pages/Trading";
 import CopyTrading from "./pages/CopyTrading";
@@ -99,6 +100,7 @@ export default function App() {
         <Route path="/app" element={<Protected />}>
           <Route index element={<Dashboard />} />
           <Route path="investments" element={<Investments />} />
+          <Route path="mining" element={<Mining />} />
           <Route path="wallet" element={<Wallet />} />
           <Route path="trading" element={<Trading />} />
           <Route path="copy-trading" element={<CopyTrading />} />
@@ -116,6 +118,7 @@ export default function App() {
           />
           <Route path="plans" element={<AdminWorkspace key="plans" section="plans" />} />
           <Route path="investments" element={<AdminWorkspace key="investments" section="investments" />} />
+          <Route path="mining" element={<AdminWorkspace key="mining" section="mining" />} />
           <Route
             path="wallet-addresses"
             element={<AdminWorkspace key="wallet-addresses" section="wallet-addresses" />}

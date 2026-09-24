@@ -177,6 +177,13 @@
 .investmentForm { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; align-items: end; }
 .investmentForm button { justify-self: start; }
 .historyPanel { min-width: 0; }
+.miningAdminGrid { display:grid; grid-template-columns:repeat(auto-fit,minmax(270px,1fr)); gap:18px; }
+.miningCreateForm { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; align-items:end; }
+.miningCreateForm button { justify-self:start; }
+.miningLevelHeading { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+.miningLevelHeading h3 { margin-bottom:18px; }
+.miningLevelHeading button { border:0; background:transparent; color:#f29288; font:inherit; font-size:11px; cursor:pointer; padding:8px; }
+.miningLevelHeading button:disabled { opacity:.45; cursor:default; }
 .qrPreview {
   display: grid;
   justify-items: center;
