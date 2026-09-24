@@ -42,7 +42,7 @@ export default function BalanceManager({ userId, onUpdate }) {
               onUpdate();
             }}
           >
-            <Field label="Balance to adjust" name="balance_key" as="select">
+            <Field label="Balance to adjust" name="balance_key" as="select" assetIcons>
               {cashBalances.map((key) => (
                 <option key={key} value={key}>
                   {key.replaceAll("_", " ")} ({user.currency_symbol || "$"})

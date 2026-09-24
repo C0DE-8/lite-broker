@@ -16,6 +16,7 @@ import { money } from "../utils/format";
 import { assets } from "../constants/assets";
 import ActionForm from "../components/ActionForm";
 import Dialog from "../components/Dialog";
+import AssetIcon from "../components/AssetIcon";
 import s from "./AdminWorkspace.module.css";
 export default function AdminWorkspace({ section }) {
   return section === "users" ? (
@@ -198,7 +199,7 @@ function WalletAddresses() {
         <section className={s.panel}>
           <h3>{editing ? `Edit ${editing.asset} address` : "Add wallet address"}</h3>
           <form className={s.walletForm} onSubmit={submit}>
-            <Field label="Asset" name="asset" as="select" defaultValue={editing?.asset || "BTC"} required>
+            <Field label="Asset" name="asset" as="select" assetIcons defaultValue={editing?.asset || "BTC"} required>
               {assets.map((asset) => <option key={asset}>{asset}</option>)}
             </Field>
             <Field
@@ -226,7 +227,7 @@ function WalletAddresses() {
             <div className={s.walletList}>
               {wallets.data.wallets.map((wallet) => (
                 <article className={s.walletItem} key={wallet.id}>
-                  <div className={s.walletAsset}><strong>{wallet.asset}</strong><span>{wallet.qr_path ? "QR code uploaded" : "Address only"}</span></div>
+                  <div className={s.walletAsset}><strong><AssetIcon asset={wallet.asset} size={25} />{wallet.asset}</strong><span>{wallet.qr_path ? "QR code uploaded" : "Address only"}</span></div>
                   <code>{wallet.address}</code>
                   <div className={s.walletActions}>
                     {wallet.qr_url && <button type="button" onClick={() => setQrWallet(wallet)}>View QR</button>}
@@ -452,7 +453,6 @@ function Investors() {
 
 function InvestmentPlans() {
   const plans = useApi("/plans?active_only=0", adminApi);
-  const empty = { name: "", roi_percent: "", accuracy_percent: "", price: "", duration_days: "", is_active: "1" };
   const [editing, setEditing] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");

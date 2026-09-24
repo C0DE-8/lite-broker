@@ -156,7 +156,6 @@
   color: #c6cdc8;
 }
 .field input,
-.field select,
 .field textarea {
   width: 100%;
   border: 1px solid var(--line);
@@ -167,15 +166,6 @@
   font: inherit;
   font-size: 14px;
   min-height: 44px;
-}
-.field select {
-  appearance: none;
-  cursor: pointer;
-  padding-right: 40px;
-  background-image: linear-gradient(45deg, transparent 50%, var(--mint) 50%), linear-gradient(135deg, var(--mint) 50%, transparent 50%);
-  background-position: calc(100% - 18px) 19px, calc(100% - 13px) 19px;
-  background-size: 5px 5px, 5px 5px;
-  background-repeat: no-repeat;
 }
 .field input[type="file"] {
   font-size: 12px;

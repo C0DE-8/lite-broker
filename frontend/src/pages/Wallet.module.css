@@ -78,6 +78,7 @@
   font-size: 10px;
   color: var(--muted);
 }
+.address > .assetLabel { display:flex; align-items:center; gap:9px; }
 .address code {
   font-size: 12px;
   overflow-wrap: anywhere;
@@ -131,6 +132,7 @@
   color: var(--mint);
   font-size: 10px;
 }
+.assetBadge { display:inline-flex; align-items:center; gap:7px; }
 .table td,
 .table th {
   padding: 15px 10px;

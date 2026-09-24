@@ -1,6 +1,7 @@
 import { useId } from "react";
 import { FiArrowUpRight, FiAlertCircle, FiArrowRight } from "react-icons/fi";
 import { Link } from "react-router-dom";
+import CustomSelect from "./CustomSelect";
 import s from "./UI.module.css";
 export function Brand() {
   return (
@@ -63,16 +64,35 @@ export function Empty({ children = "Your activity will appear here." }) {
   );
 }
 export function Field({ label, name, as, children, ...props }) {
+  const fieldId = useId();
+  const id = props.id || `${fieldId}-control`;
+  const labelId = `${fieldId}-label`;
+  if (as === "select") {
+    return (
+      <div className={s.field}>
+        <span id={labelId}>{label}</span>
+        <CustomSelect
+          {...props}
+          id={id}
+          name={name}
+          aria-labelledby={labelId}
+        >
+          {children}
+        </CustomSelect>
+      </div>
+    );
+  }
   const Tag = as || "input";
   return (
     <label className={s.field}>
       <span>{label}</span>
-      <Tag name={name} {...props}>
+      <Tag id={id} name={name} {...props}>
         {children}
       </Tag>
     </label>
   );
 }
+export { CustomSelect };
 export function ArrowLink({ to, children }) {
   return (
     <Link className={s.arrowLink} to={to}>

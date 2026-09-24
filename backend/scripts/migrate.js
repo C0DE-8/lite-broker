@@ -231,6 +231,22 @@ async function migrate() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   `);
 
+  await createTable("crypto_conversions", `
+    CREATE TABLE IF NOT EXISTS crypto_conversions (
+      id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+      user_id INT UNSIGNED NOT NULL,
+      direction ENUM('buy','sell') NOT NULL,
+      asset VARCHAR(16) NOT NULL,
+      source_amount DECIMAL(28,8) NOT NULL,
+      received_amount DECIMAL(28,8) NOT NULL,
+      price_usd DECIMAL(28,8) NOT NULL,
+      price_source VARCHAR(50) NOT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (id),
+      KEY crypto_conversions_user_idx (user_id,id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `);
+
   await createTable("wallet_addresses", `
     CREATE TABLE IF NOT EXISTS wallet_addresses (
       id INT UNSIGNED NOT NULL AUTO_INCREMENT,

@@ -200,7 +200,27 @@ app.use(
    ✅ HEALTH CHECK
    ========================================================= */
 app.get("/", (req, res) => {
-  res.json({ ok: true, service: SERVICE_NAME });
+  res.json({ ok: true, service: SERVICE_NAME, api: "/api", health: "/api/health", routes: "/api/routes" });
+});
+
+app.get("/api/routes", (_req, res) => {
+  res.json({
+    ok: true,
+    service: SERVICE_NAME,
+    routes: {
+      users: "/api/users",
+      admin: "/api/admin",
+      mining: "/api/mining (also available under /api/users)",
+      markets: "/api/markets",
+      health: "/api/health",
+    },
+    checks: [
+      "GET /api/health",
+      "GET /api/users/levels",
+      "GET /api/users/conversions",
+      "GET /api/mining/levels",
+    ],
+  });
 });
 
 app.get(["/health", "/api/health", "/api/debug/health"], async (req, res) => {
@@ -221,15 +241,21 @@ app.get(["/health", "/api/health", "/api/debug/health"], async (req, res) => {
    ✅ ROUTES
    ========================================================= */
 app.use("/api/admin", require("./middleware/adminAudit"), require("./routes/admin.workspace.routes"), adminAuthRoutes);
-app.use("/api/users", require("./routes/binary.routes"), userRoutes);
-app.use("/api/mining", require("./routes/mining.routes"));
+const miningRoutes = require("./routes/mining.routes");
+const conversionRoutes = require("./routes/conversion.routes");
+app.use("/api/users", require("./routes/binary.routes"), userRoutes, miningRoutes, conversionRoutes);
+app.use("/api/mining", miningRoutes);
 app.use("/api/markets", require("./routes/market.routes"));
 
 /* =========================================================
    ❌ 404 HANDLER
    ========================================================= */
 app.use((req, res) => {
-  res.status(404).json({ message: "Route not found" });
+  res.status(404).json({
+    message: "Route not found",
+    path: req.originalUrl,
+    hint: "Check /api/routes for registered API prefixes and /api/health for service status.",
+  });
 });
 
 /* =========================================================

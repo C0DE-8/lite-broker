@@ -1,12 +1,14 @@
 import AssetBalances from "../components/AssetBalances";
+import WalletConvert from "../components/WalletConvert";
 import { assets } from "../constants/assets";
 import { money } from "../utils/format";
 import { useState } from "react";
-import { FiCopy, FiArrowDownLeft, FiArrowUpRight, FiHelpCircle } from "react-icons/fi";
+import { FiCopy, FiArrowDownLeft, FiArrowUpRight, FiHelpCircle, FiRepeat } from "react-icons/fi";
 import { useApi } from "../hooks/useApi";
 import { Heading, Status, Empty, Field, Button } from "../components/UI";
 import ActionForm from "../components/ActionForm";
 import Dialog from "../components/Dialog";
+import AssetIcon from "../components/AssetIcon";
 import s from "./Wallet.module.css";
 export default function Wallet() {
   const [tab, setTab] = useState("deposit"),
@@ -18,16 +20,17 @@ export default function Wallet() {
     balance = useApi("/balances"),
     deposits = useApi("/deposits"),
     withdrawals = useApi("/withdrawals"),
+    conversions = useApi("/conversions"),
     pinInfo = useApi("/withdrawal-pin-info");
   const chosen = wallets.data?.wallets.find((w) => w.asset === asset);
   const currencySymbol = balance.data?.balances.currency_symbol || "$";
-  const history = tab === "deposit" ? deposits : withdrawals;
-  const rows =
-    history.data?.[tab === "deposit" ? "deposits" : "withdrawals"] || [];
+  const history = tab === "deposit" ? deposits : tab === "withdraw" ? withdrawals : conversions;
+  const rows = history.data?.[tab === "deposit" ? "deposits" : tab === "withdraw" ? "withdrawals" : "conversions"] || [];
   function refresh() {
     balance.reload();
     deposits.reload();
     withdrawals.reload();
+    conversions.reload();
   }
   async function copy() {
     try {
@@ -111,8 +114,21 @@ export default function Wallet() {
               <FiArrowUpRight />
               Withdraw
             </button>
+            <button
+              className={tab === "convert" ? s.active : ""}
+              onClick={() => setTab("convert")}
+            >
+              <FiRepeat />
+              Convert
+            </button>
           </div>
-          {tab === "deposit" ? (
+          {tab === "convert" ? (
+            <WalletConvert
+              balances={balance.data?.balances}
+              currencySymbol={currencySymbol}
+              onSuccess={refresh}
+            />
+          ) : tab === "deposit" ? (
             <>
               <Status {...wallets} retry={wallets.reload} />
               {wallets.data &&
@@ -127,6 +143,7 @@ export default function Wallet() {
                       label="Deposit asset"
                       name="asset"
                       as="select"
+                      assetIcons
                       value={asset}
                       onChange={(e) => {
                         setAsset(e.target.value);
@@ -143,7 +160,7 @@ export default function Wallet() {
                     </Field>
                     {chosen && (
                       <div className={s.address}>
-                        <span>Platform deposit address · {chosen.asset}</span>
+                        <span className={s.assetLabel}><AssetIcon asset={chosen.asset} size={24} />Platform deposit address · {chosen.asset}</span>
                         <code>{chosen.address}</code>
                         <button type="button" onClick={copy}>
                           <FiCopy />
@@ -220,7 +237,7 @@ export default function Wallet() {
               />
               {method === "crypto" ? (
                 <>
-                  <Field label="Asset" name="asset" as="select">
+                  <Field label="Asset" name="asset" as="select" assetIcons>
                     {assets.map((a) => (
                       <option key={a}>{a}</option>
                     ))}
@@ -283,37 +300,27 @@ export default function Wallet() {
           )}
         </section>
         <section className={s.panel}>
-          <h3>{tab === "deposit" ? "Deposit" : "Withdrawal"} history</h3>
+          <h3>{tab === "deposit" ? "Deposit" : tab === "withdraw" ? "Withdrawal" : "Conversion"} history</h3>
           <Status {...history} retry={history.reload} />
           {history.data &&
             (rows.length ? (
               <div className={s.table}>
                 <table>
                   <thead>
-                    <tr>
-                      <th>Amount</th>
-                      <th>Asset / method</th>
-                      <th>Status</th>
-                      <th>Date</th>
-                    </tr>
+                    {tab === "convert" ? <tr><th>Action</th><th>From</th><th>Received</th><th>Price</th><th>Date</th></tr> : <tr><th>Amount</th><th>Asset / method</th><th>Status</th><th>Date</th></tr>}
                   </thead>
                   <tbody>
-                    {rows.map((row) => (
-                      <tr key={row.id}>
-                        <td>{money(row.amount, currencySymbol)}</td>
-                        <td>{row.asset || row.method}</td>
-                        <td>
-                          <span className={s.badge}>{row.status}</span>
-                        </td>
-                        <td>{new Date(row.created_at).toLocaleDateString()}</td>
-                      </tr>
+                    {rows.map((row) => tab === "convert" ? (
+                      <tr key={row.id}><td><span className={`${s.badge} ${s.assetBadge}`}><AssetIcon asset={row.asset} size={22} />{row.direction} {row.asset}</span></td><td>{row.direction === "buy" ? money(row.source_amount, currencySymbol) : `${Number(row.source_amount).toLocaleString("en-US", { maximumFractionDigits: 8 })} ${row.asset}`}</td><td>{row.direction === "buy" ? `${Number(row.received_amount).toLocaleString("en-US", { maximumFractionDigits: 8 })} ${row.asset}` : money(row.received_amount, currencySymbol)}</td><td>{money(row.price_usd, currencySymbol)}</td><td>{new Date(row.created_at).toLocaleDateString()}</td></tr>
+                    ) : (
+                      <tr key={row.id}><td>{money(row.amount, currencySymbol)}</td><td>{row.asset || row.method}</td><td><span className={s.badge}>{row.status}</span></td><td>{new Date(row.created_at).toLocaleDateString()}</td></tr>
                     ))}
                   </tbody>
                 </table>
               </div>
             ) : (
               <Empty>
-                Your {tab === "deposit" ? "deposits" : "withdrawals"} will
+                Your {tab === "deposit" ? "deposits" : tab === "withdraw" ? "withdrawals" : "conversions"} will
                 appear here.
               </Empty>
             ))}

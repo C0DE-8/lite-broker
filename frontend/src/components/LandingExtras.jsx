@@ -3,6 +3,7 @@ import { FiArrowUpRight, FiActivity, FiCpu, FiPause, FiPlay, FiArrowRight, FiMes
 import { Button, ArrowLink } from "./UI";
 import { testimonials } from "../data/testimonials";
 import { getMarket } from "../api/tradingView";
+import AssetIcon from "./AssetIcon";
 import s from "../pages/Landing.module.css";
 
 const coins = [["BTC", "Bitcoin"], ["ETH", "Ethereum"], ["SOL", "Solana"], ["XRP", "XRP"], ["ADA", "Cardano"], ["DOGE", "Dogecoin"], ["AVAX", "Avalanche"], ["LINK", "Chainlink"]];
@@ -30,7 +31,7 @@ export function CoinTicker({ compact = false }) {
     <div className={s.tickerWindow}><div className={s.tickerTrack} style={{ animationPlayState: paused ? "paused" : undefined }}>
       {[0, 1].map(copy => <div className={s.tickerGroup} key={copy} aria-hidden={copy === 1 ? true : undefined}>{coins.map(([symbol, name]) => {
         const q = quotes[symbol];
-        return <div className={s.coinQuote} key={symbol}><span className={s.coinMonogram}>{symbol === "BTC" ? "₿" : symbol.slice(0, 1)}</span><span><strong>{name}</strong><small>{symbol}{q?.stale ? " · delayed" : ""}</small></span>{!compact && <span className={s.quoteNumbers}>{q ? <><strong>{q.price.toLocaleString("en-US", { maximumFractionDigits: q.price < 1 ? 4 : 2, minimumFractionDigits: 2 })}</strong><small className={q.changePercent < 0 ? s.negative : s.positive}>{q.changePercent >= 0 ? "+" : ""}{q.changePercent.toFixed(2)}%</small></> : <small>Quote unavailable</small>}</span>}</div>;
+        return <div className={s.coinQuote} key={symbol}><AssetIcon asset={symbol} size={32} /><span><strong>{name}</strong><small>{symbol}{q?.stale ? " · delayed" : ""}</small></span>{!compact && <span className={s.quoteNumbers}>{q ? <><strong>{q.price.toLocaleString("en-US", { maximumFractionDigits: q.price < 1 ? 4 : 2, minimumFractionDigits: 2 })}</strong><small className={q.changePercent < 0 ? s.negative : s.positive}>{q.changePercent >= 0 ? "+" : ""}{q.changePercent.toFixed(2)}%</small></> : <small>Quote unavailable</small>}</span>}</div>;
       })}</div>)}
     </div></div>
   </div>;
@@ -93,7 +94,6 @@ export function BitcoinNews() {
 }
 
 export function MiningSection() {
-  const [power, setPower] = useState(100);
   return <section className={s.section} id="mining"><div className={s.miningPanel}><div className={s.miningCopy}><span className={s.eyebrow}>THE NEXT CHAPTER · MINING</span><h2>Power your mining.<br />Track every hour.</h2><p>Choose equipment, keep its battery charged, and manage when your miner runs. Hourly credits build in your mining balance, ready to transfer to another account balance.</p><span className={s.availability}>Three equipment levels · User managed</span><div className={s.miningFacts}><div><FiCpu /><strong>Choose your equipment</strong><p>Each level lists its wattage, purchase price, and hourly mining credit before you buy.</p></div><div><FiActivity /><strong>Run on your schedule</strong><p>Start or stop a miner any time. Purchase a battery when its runtime runs out.</p></div></div><a href="/app/mining">Open mining workspace <FiArrowUpRight /></a></div><div className={s.miningPreview}><div className={s.previewTop}><FiCpu /><span>MINING WORKSPACE</span><small>LIVE SERVICE</small></div><div className={s.miningArt} aria-hidden="true">{[0,1,2].map(n => <div key={n}><span /><i /><i /><b>V / 0{n+1}</b></div>)}</div><h3>Equipment, battery, earnings.</h3><p>Purchase one of three admin-configured mining levels. Earnings accrue by the second while the miner is running and appear in your mining balance.</p><div className={s.rewardRate}><span>Miner controls</span><strong>Start · Stop</strong></div><div className={s.costResult}><span>Battery runtime<small>Recharge by purchasing a battery</small></span><strong>Choose a level</strong></div><small>Available credits can be transferred to your main, profit, or investment balance.</small></div></div></section>;
 }
 

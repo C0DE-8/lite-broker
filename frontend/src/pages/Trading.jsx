@@ -12,6 +12,7 @@ import { Heading, Status, Empty, Field, Button } from "../components/UI";
 import ActionForm from "../components/ActionForm";
 import MarketChart from "../components/MarketChart";
 import TradingStrength from "../components/TradingStrength";
+import AssetIcon from "../components/AssetIcon";
 import s from "./Trading.module.css";
 export default function Trading() {
   const [asset, setAsset] = useState("BTC"),
@@ -67,9 +68,12 @@ export default function Trading() {
       <div className={s.terminal}>
         <section className={s.chartPanel}>
           <div className={s.chartHeading}>
-            <div>
-              <strong>{asset} / USDT</strong>
-              <span>Binance · Exchange prices</span>
+            <div className={s.assetTitle}>
+              <AssetIcon asset={asset} size={34} />
+              <div>
+                <strong>{asset} / USDT</strong>
+                <span>Binance · Exchange prices</span>
+              </div>
             </div>
             <span>
               <FiClock />
@@ -119,6 +123,7 @@ export default function Trading() {
                 label="Market"
                 name="asset"
                 as="select"
+                assetIcons
                 value={asset}
                 onChange={(e) => setAsset(e.target.value)}
               >
