@@ -6,7 +6,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { FiCheck, FiChevronDown } from "react-icons/fi";
+import { FiCheck, FiChevronDown, FiSearch } from "react-icons/fi";
 import AssetIcon from "./AssetIcon";
 import { assets } from "../constants/assets";
 import s from "./CustomSelect.module.css";
@@ -35,6 +35,8 @@ export default function CustomSelect({
   name,
   id,
   assetIcons = false,
+  searchable = false,
+  searchPlaceholder = "Search options…",
   "aria-labelledby": labelledBy,
   ...selectProps
 }) {
@@ -46,6 +48,7 @@ export default function CustomSelect({
           value: String(child.props.value ?? optionText(child.props.children)),
           label: child.props.children,
           text: optionText(child.props.children),
+          searchText: `${optionText(child.props.children)} ${child.props["data-search"] || ""}`.toLowerCase(),
           disabled: Boolean(child.props.disabled),
         })),
     [children],
@@ -58,10 +61,16 @@ export default function CustomSelect({
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const [invalid, setInvalid] = useState(false);
+  const [search, setSearch] = useState("");
   const rootRef = useRef(null);
   const selectRef = useRef(null);
+  const triggerRef = useRef(null);
+  const searchRef = useRef(null);
   const currentValue = controlled ? String(value ?? "") : internalValue;
   const selected = options.find((option) => option.value === currentValue);
+  const visibleOptions = searchable && search.trim()
+    ? options.filter((option) => option.searchText.includes(search.trim().toLowerCase()))
+    : options;
   const showAssetIcon = (option) =>
     assetIcons && supportedAssetIcons.has(option?.value);
 
@@ -86,18 +95,23 @@ export default function CustomSelect({
     return () => form.removeEventListener("reset", reset);
   }, [controlled, fallback]);
 
+  useEffect(() => {
+    if (open && searchable) searchRef.current?.focus();
+  }, [open, searchable]);
+
   function move(direction) {
-    if (!options.length) return;
+    if (!visibleOptions.length) return;
     let next = activeIndex;
-    for (let count = 0; count < options.length; count += 1) {
-      next = (next + direction + options.length) % options.length;
-      if (!options[next].disabled) break;
+    for (let count = 0; count < visibleOptions.length; count += 1) {
+      next = (next + direction + visibleOptions.length) % visibleOptions.length;
+      if (!visibleOptions[next].disabled) break;
     }
     setActiveIndex(next);
   }
 
   function show() {
     if (disabled) return;
+    setSearch("");
     const selectedIndex = options.findIndex(
       (option) => option.value === currentValue && !option.disabled,
     );
@@ -129,17 +143,17 @@ export default function CustomSelect({
       else move(event.key === "ArrowDown" ? 1 : -1);
     } else if ((event.key === "Enter" || event.key === " ") && open) {
       event.preventDefault();
-      if (activeIndex >= 0) choose(options[activeIndex]);
+      if (activeIndex >= 0) choose(visibleOptions[activeIndex]);
     } else if (event.key === "Escape" && open) {
       event.preventDefault();
       setOpen(false);
     } else if (event.key === "Home" && open) {
       event.preventDefault();
-      setActiveIndex(options.findIndex((option) => !option.disabled));
+      setActiveIndex(visibleOptions.findIndex((option) => !option.disabled));
     } else if (event.key === "End" && open) {
       event.preventDefault();
-      for (let index = options.length - 1; index >= 0; index -= 1) {
-        if (!options[index].disabled) {
+      for (let index = visibleOptions.length - 1; index >= 0; index -= 1) {
+        if (!visibleOptions[index].disabled) {
           setActiveIndex(index);
           break;
         }
@@ -179,6 +193,7 @@ export default function CustomSelect({
         {children}
       </select>
       <button
+        ref={triggerRef}
         type="button"
         className={s.trigger}
         disabled={disabled}
@@ -196,25 +211,57 @@ export default function CustomSelect({
         <FiChevronDown />
       </button>
       {open && (
-        <div className={s.menu} role="listbox" aria-labelledby={labelledBy}>
-          {options.map((option, index) => (
-            <button
-              type="button"
-              role="option"
-              aria-selected={option.value === currentValue}
-              className={`${s.option} ${index === activeIndex ? s.active : ""}`}
-              disabled={option.disabled}
-              key={`${option.value}-${index}`}
-              onPointerMove={() => !option.disabled && setActiveIndex(index)}
-              onClick={() => choose(option)}
-            >
-              <span className={s.value}>
-                {showAssetIcon(option) && <AssetIcon asset={option.value} size={25} />}
-                <span>{option.label}</span>
-              </span>
-              {option.value === currentValue && <FiCheck />}
-            </button>
-          ))}
+        <div className={s.menu}>
+          {searchable && (
+            <label className={s.search}>
+              <FiSearch />
+              <input
+                ref={searchRef}
+                type="search"
+                value={search}
+                placeholder={searchPlaceholder}
+                aria-label={searchPlaceholder}
+                onChange={(event) => {
+                  setSearch(event.target.value);
+                  setActiveIndex(0);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+                    event.preventDefault();
+                    move(event.key === "ArrowDown" ? 1 : -1);
+                  } else if (event.key === "Enter" && activeIndex >= 0 && visibleOptions[activeIndex]) {
+                    event.preventDefault();
+                    choose(visibleOptions[activeIndex]);
+                  } else if (event.key === "Escape") {
+                    event.preventDefault();
+                    setOpen(false);
+                    triggerRef.current?.focus();
+                  }
+                }}
+              />
+            </label>
+          )}
+          <div className={s.options} role="listbox" aria-labelledby={labelledBy}>
+            {visibleOptions.map((option, index) => (
+              <button
+                type="button"
+                role="option"
+                aria-selected={option.value === currentValue}
+                className={`${s.option} ${index === activeIndex ? s.active : ""}`}
+                disabled={option.disabled}
+                key={`${option.value}-${index}`}
+                onPointerMove={() => !option.disabled && setActiveIndex(index)}
+                onClick={() => choose(option)}
+              >
+                <span className={s.value}>
+                  {showAssetIcon(option) && <AssetIcon asset={option.value} size={25} />}
+                  <span>{option.label}</span>
+                </span>
+                {option.value === currentValue && <FiCheck />}
+              </button>
+            ))}
+            {!visibleOptions.length && <p className={s.noResults}>No matching options</p>}
+          </div>
         </div>
       )}
       {invalid && (

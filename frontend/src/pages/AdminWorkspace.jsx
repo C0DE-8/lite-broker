@@ -510,7 +510,7 @@ function InvestmentHistory() {
     <Heading eyebrow="INVESTMENT MANAGEMENT" title="Investment history.">Review investor records and add an investment entry to a user account.</Heading>
     <section className={`${s.panel} ${s.createInvestment}`}><h3>Add investment history</h3>
       <form className={s.investmentForm} onSubmit={add}>
-        <Field label="Investor" name="user_id" as="select" defaultValue="" required><option value="" disabled>Select investor</option>{(users.data?.users || []).map((user) => <option key={user.id} value={user.id}>{user.full_name} · {user.email}</option>)}</Field>
+        <Field label="Investor" name="user_id" as="select" searchable searchPlaceholder="Search name, email, or username…" defaultValue="" required><option value="" disabled>Select investor</option>{(users.data?.users || []).map((user) => <option key={user.id} value={user.id} data-search={user.username}>{user.full_name} · {user.email}</option>)}</Field>
         <Field label="Plan" name="plan_id" as="select" defaultValue="" required><option value="" disabled>Select plan</option>{(plans.data?.plans || []).map((plan) => <option key={plan.id} value={plan.id}>{plan.name} · {money(plan.price)} minimum</option>)}</Field>
         <Field label="Amount (USD)" name="amount" type="number" min="0.01" step="0.01" required />
         <Field label="Admin note (optional)" name="admin_note" as="textarea" rows="2" maxLength="1000" />
