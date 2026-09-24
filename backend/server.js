@@ -210,6 +210,7 @@ app.get("/api/routes", (_req, res) => {
     routes: {
       users: "/api/users",
       admin: "/api/admin",
+      adminMining: "/api/admin/mining/admin/levels",
       mining: "/api/mining (also available under /api/users)",
       markets: "/api/markets",
       health: "/api/health",
@@ -219,6 +220,7 @@ app.get("/api/routes", (_req, res) => {
       "GET /api/users/levels",
       "GET /api/users/conversions",
       "GET /api/mining/levels",
+      "GET /api/admin/mining/admin/levels",
     ],
   });
 });
@@ -245,6 +247,9 @@ const miningRoutes = require("./routes/mining.routes");
 const conversionRoutes = require("./routes/conversion.routes");
 app.use("/api/users", require("./routes/binary.routes"), userRoutes, miningRoutes, conversionRoutes);
 app.use("/api/mining", miningRoutes);
+// AdminWorkspace uses adminApi, whose base is /api/admin. Keep the mining
+// router available at the resulting /api/admin/mining/admin/* paths.
+app.use("/api/admin/mining", miningRoutes);
 app.use("/api/markets", require("./routes/market.routes"));
 
 /* =========================================================

@@ -13,7 +13,7 @@ export default function BalanceManager({ userId, onUpdate }) {
   return (
     <section className={s.panel}>
       <h3>Account balances</h3>
-      <Status {...account} retry={account.reload} />
+      <Status {...account} retry={account.reload} variant="panel" skeletonCount={1} />
       {user && (
         <>
           <div className={s.cash}>
@@ -72,7 +72,7 @@ export default function BalanceManager({ userId, onUpdate }) {
         </>
       )}
       <h3>Recent balance adjustments</h3>
-      <Status {...history} retry={history.reload} />
+      <Status {...history} retry={history.reload} variant="table" skeletonCount={1} />
       {history.data?.adjustments.length === 0 && (
         <p>No manual adjustments yet.</p>
       )}

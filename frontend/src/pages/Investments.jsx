@@ -165,7 +165,7 @@ export default function Investments() {
       )}
       <section className={s.panel}>
         <h3>Investment history</h3>
-        <Status {...history} retry={history.reload} />
+        <Status {...history} retry={history.reload} variant="table" skeletonCount={1} />
         {history.data &&
           (history.data.investments?.length ? (
             <div className={s.table}>

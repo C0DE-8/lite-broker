@@ -14,7 +14,7 @@ export default function Settings() {
       <div className={s.grid}>
         <section className={s.panel}>
           <h3>Personal details</h3>
-          <Status {...me} retry={me.reload} />
+          <Status {...me} retry={me.reload} variant="panel" skeletonCount={1} />
           {me.data && (
             <dl>
               {[
@@ -74,7 +74,7 @@ export default function Settings() {
         </section>
         <section className={s.panel}>
           <h3>Identity verification</h3>
-          <Status {...kyc} retry={kyc.reload} />
+          <Status {...kyc} retry={kyc.reload} variant="panel" skeletonCount={1} />
           {kyc.data && (
             <p className={s.verification}>
               Verification status:{" "}
@@ -116,7 +116,7 @@ export default function Settings() {
         </section>
         <section className={s.panel}>
           <h3>Account notifications</h3>
-          <Status {...notifications} retry={notifications.reload} />
+          <Status {...notifications} retry={notifications.reload} variant="panel" skeletonCount={1} />
           {notifications.data &&
             (notifications.data.notifications.length ? (
               notifications.data.notifications.map((n) => (

@@ -88,7 +88,6 @@
   color: var(--mint);
   font-weight: 600;
 }
-.status,
 .empty {
   padding: 55px 24px;
   text-align: center;
@@ -97,6 +96,76 @@
   align-items: center;
   justify-content: center;
   gap: 12px;
+}
+.loadingState {
+  display: grid;
+  gap: 14px;
+  width: 100%;
+  margin: 16px 0;
+}
+.loadingLabel {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.skeletonGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+  gap: 12px;
+}
+.skeletonCard {
+  position: relative;
+  overflow: hidden;
+  min-height: 142px;
+  padding: 17px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #111814;
+}
+.skeletonCard::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, #b3f6aa0a, transparent);
+  animation: skeletonSweep 1.5s ease-in-out infinite;
+}
+.skeletonTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 22px;
+}
+.skeletonIcon,
+.skeletonShort,
+.skeletonValue,
+.skeletonLine,
+.skeletonLineSmall {
+  display: block;
+  border-radius: 999px;
+  background: #ffffff0b;
+}
+.skeletonIcon { width: 34px; height: 34px; border-radius: 50%; }
+.skeletonShort { width: 55px; height: 8px; }
+.skeletonValue { width: 65%; height: 18px; margin-bottom: 17px; }
+.skeletonLine { width: 100%; height: 8px; margin-bottom: 9px; }
+.skeletonLineSmall { width: 48%; height: 8px; }
+.loading_table .skeletonGrid,
+.loading_panel .skeletonGrid { grid-template-columns: 1fr; }
+.loading_table .skeletonCard { min-height: 178px; }
+.loading_table .skeletonTop { margin-bottom: 18px; }
+.loading_table .skeletonValue { width: 32%; height: 11px; }
+.loading_table .skeletonLine,
+.loading_table .skeletonLineSmall { width: 100%; height: 24px; margin-bottom: 10px; border-radius: 5px; }
+.loading_panel .skeletonCard { min-height: 205px; }
+.loading_panel .skeletonValue { width: 42%; }
+.loading_panel .skeletonLine { height: 12px; margin-bottom: 15px; }
+.loading_panel .skeletonLineSmall { width: 72%; height: 12px; }
+@keyframes skeletonSweep {
+  to { transform: translateX(100%); }
 }
 .empty {
   flex-direction: column;

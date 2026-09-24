@@ -1001,7 +1001,8 @@ h2 {
 .coinQuote .positive { color:var(--mint); }
 .coinQuote .negative { color:#ef9292; }
 .compactTicker { margin-top:80px; min-height:82px; }
-.compactTicker .coinQuote { min-width:180px; }
+.compactTicker .coinQuote { min-width:190px; padding:18px 22px; gap:12px; }
+.compactTicker .coinQuote > svg { width:34px; height:34px; }
 .compactTicker .tickerTrack { animation-duration:60s; }
 @keyframes coinTravel { to { transform:translateX(-50%); } }
 .routePanel { background:linear-gradient(120deg,#18231b,#101612); border:1px solid var(--line); border-radius:15px; overflow:hidden; }

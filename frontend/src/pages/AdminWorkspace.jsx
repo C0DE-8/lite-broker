@@ -78,7 +78,7 @@ function AdminProfile() {
       <Heading eyebrow="ADMINISTRATION" title="Your profile.">
         Keep the details you use to access and manage the workspace up to date.
       </Heading>
-      <Status {...profile} retry={profile.reload} />
+      <Status {...profile} retry={profile.reload} variant="panel" skeletonCount={1} />
       {profile.data && (
         <div className={s.profileLayout}>
           <section className={s.panel}>
@@ -185,7 +185,7 @@ function WalletAddresses() {
         <section className={s.panel}>
           <h3>Withdrawal PIN information</h3>
           <p className={s.settingsHint}>This fee and message appear when an investor clicks the help icon beside Withdrawal PIN.</p>
-          <Status {...pinSettings} retry={pinSettings.reload} />
+          <Status {...pinSettings} retry={pinSettings.reload} variant="panel" skeletonCount={1} />
           {pinSettings.data && (
             <form className={s.walletForm} onSubmit={savePinSettings}>
               <Field label="PIN fee (USD)" name="fee" type="number" min="0" step="0.01" defaultValue={pinSettings.data.settings.fee} required />
@@ -222,7 +222,7 @@ function WalletAddresses() {
         </section>
         <section className={s.panel}>
           <h3>Published deposit addresses</h3>
-          <Status {...wallets} retry={wallets.reload} />
+          <Status {...wallets} retry={wallets.reload} skeletonCount={2} />
           {wallets.data && (wallets.data.wallets.length ? (
             <div className={s.walletList}>
               {wallets.data.wallets.map((wallet) => (
@@ -260,7 +260,7 @@ function Overview() {
       <Heading eyebrow="ADMINISTRATION" title="Your control room.">
         A clear view of investors, pending requests, and platform activity.
       </Heading>
-      <Status {...profile} retry={profile.reload} />
+      <Status {...profile} retry={profile.reload} variant="panel" skeletonCount={1} />
       {profile.data && (
         <div className={s.profile}>
           <FiShield />
@@ -344,7 +344,7 @@ function Investors() {
           onChange={(e) => setSearch(e.target.value)}
         />
       </div>
-      <Status {...users} retry={users.reload} />
+      <Status {...users} retry={users.reload} variant="table" skeletonCount={1} />
       {users.data && (
         <div className={s.panel}>
           {rows.length ? (
@@ -485,7 +485,7 @@ function InvestmentPlans() {
         {error && <p className={s.formError} role="alert">{error}</p>}{message && <p className={s.formSuccess} role="status">{message}</p>}
       </section>
       <section className={s.panel}>
-        <h3>All plans</h3><Status {...plans} retry={plans.reload} />
+        <h3>All plans</h3><Status {...plans} retry={plans.reload} skeletonCount={2} />
         {plans.data && (plans.data.plans.length ? <div className={s.planList}>{plans.data.plans.map((plan) => <article className={s.planItem} key={plan.id}>
           <div className={s.walletAsset}><strong>{plan.name}</strong><span>{plan.is_active ? "Active" : "Inactive"}</span></div>
           <p>{plan.description || "No description"}</p><small>{money(plan.price)} minimum · {plan.roi_percent}% ROI · {plan.duration_days} days</small>
@@ -519,7 +519,7 @@ function InvestmentHistory() {
       <p className={s.settingsHint}>This creates an active history record and increases the investor’s investment balance by the same amount.</p>
       {error && <p className={s.formError} role="alert">{error}</p>}{message && <p className={s.formSuccess} role="status">{message}</p>}
     </section>
-    <section className={`${s.panel} ${s.historyPanel}`}><h3>Investor investment records</h3><Status {...investments} retry={investments.reload} />
+    <section className={`${s.panel} ${s.historyPanel}`}><h3>Investor investment records</h3><Status {...investments} retry={investments.reload} variant="table" skeletonCount={1} />
       {investments.data && (investments.data.investments.length ? <div className={s.table}><table><thead><tr><th>Investor</th><th>Plan</th><th>Amount</th><th>Expected total</th><th>Duration</th><th>Status</th><th>Started</th></tr></thead><tbody>{investments.data.investments.map((item) => <tr key={item.id}><td><strong>{item.full_name}</strong><small>{item.email}</small></td><td>{item.plan_name}</td><td>{money(item.amount)}</td><td>{money(item.expected_total)}</td><td>{item.duration_days} days</td><td>{item.status}</td><td>{item.started_at ? new Date(item.started_at).toLocaleDateString() : "—"}</td></tr>)}</tbody></table></div> : <Empty>No investment records yet.</Empty>)}
     </section>
   </>;

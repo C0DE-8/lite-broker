@@ -21,7 +21,7 @@ export default function CopyTrading() {
         Trader statistics are supplied by the platform. Past performance does
         not guarantee future results. Copy trading involves risk.
       </p>
-      <Status {...status} retry={status.reload} />
+      <Status {...status} retry={status.reload} variant="panel" skeletonCount={1} />
       {status.data && (
         <section className={s.status}>
           <div>

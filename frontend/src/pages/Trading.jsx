@@ -258,7 +258,7 @@ export default function Trading() {
             </button>
           </div>
         </div>
-        <Status {...history} retry={history.reload} />
+        <Status {...history} retry={history.reload} variant="table" skeletonCount={1} />
         <Status error={settleError} />
         {history.data &&
           (trades.length ? (

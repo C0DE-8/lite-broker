@@ -47,7 +47,7 @@ export default function Wallet() {
       </Heading>
       <div className={s.balance}>
         <span>Available balance</span>
-        <Status {...balance} retry={balance.reload} />
+        <Status {...balance} retry={balance.reload} variant="panel" skeletonCount={1} />
         {balance.data && (
           <h2>
             {money(
@@ -130,7 +130,7 @@ export default function Wallet() {
             />
           ) : tab === "deposit" ? (
             <>
-              <Status {...wallets} retry={wallets.reload} />
+              <Status {...wallets} retry={wallets.reload} variant="panel" skeletonCount={1} />
               {wallets.data &&
                 (wallets.data.wallets.length ? (
                   <ActionForm
@@ -301,7 +301,7 @@ export default function Wallet() {
         </section>
         <section className={s.panel}>
           <h3>{tab === "deposit" ? "Deposit" : tab === "withdraw" ? "Withdrawal" : "Conversion"} history</h3>
-          <Status {...history} retry={history.reload} />
+          <Status {...history} retry={history.reload} variant="table" skeletonCount={1} />
           {history.data &&
             (rows.length ? (
               <div className={s.table}>
@@ -337,7 +337,7 @@ export default function Wallet() {
               PIN. If you already have a PIN, close this message and enter it to
               withdraw as normal.
             </p>
-            <Status {...pinInfo} retry={pinInfo.reload} />
+            <Status {...pinInfo} retry={pinInfo.reload} variant="panel" skeletonCount={1} />
             {pinInfo.data && (
               <>
                 <div>

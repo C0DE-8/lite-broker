@@ -39,24 +39,35 @@ export default function Dashboard({ preview = false }) {
 function LiveDashboard() {
   const profile = useApi("/me"),
     investments = useApi("/investments");
+  if (profile.loading) return <DashboardSkeleton />;
+  if (profile.error)
+    return <Status error={profile.error} retry={profile.reload} />;
   return (
     <>
-      <Status {...profile} retry={profile.reload} />
       {profile.data && (
         <Overview
           user={profile.data.user}
           investments={investments.data?.investments || []}
+          investmentsLoading={investments.loading}
+          investmentsError={investments.error}
+          reloadInvestments={investments.reload}
         />
       )}
-      <Status
-        loading={investments.loading}
-        error={investments.error}
-        retry={investments.reload}
-      />
     </>
   );
 }
-function Overview({ user, preview = false, investments }) {
+function DashboardSkeleton() {
+  return (
+    <div className={s.dashboardSkeleton} role="status" aria-label="Loading dashboard" aria-busy="true">
+      <div className={s.skeletonHeading}><span /><i /><i /></div>
+      <div className={s.stats}>{[0, 1, 2].map((item) => <article className={s.skeletonCard} key={item}><span /><strong /><i /></article>)}</div>
+      <section className={`${s.panel} ${s.skeletonStrength}`}><span /><strong /><i /></section>
+      <div className={s.mainGrid}><section className={`${s.panel} ${s.skeletonPanel}`}><span /><strong /><i /><i /><i /></section><section className={`${s.panel} ${s.skeletonPanel}`}><span /><strong /><i /><i /></section></div>
+      <div className={s.lowerGrid}><section className={`${s.panel} ${s.skeletonPanel}`}><span /><i /><i /><i /></section><section className={`${s.panel} ${s.skeletonPanel}`}><span /><i /><i /><i /></section></div>
+    </div>
+  );
+}
+function Overview({ user, preview = false, investments, investmentsLoading = false, investmentsError = "", reloadInvestments }) {
   const currencySymbol = user.currency_symbol || "$";
   const total =
     Number(user.main_balance || 0) +
@@ -182,7 +193,11 @@ function Overview({ user, preview = false, investments }) {
               View all
             </ArrowLink>
           </div>
-          {investments.length ? (
+          {investmentsLoading ? (
+            <Status loading variant="table" skeletonCount={1} />
+          ) : investmentsError ? (
+            <Status error={investmentsError} retry={reloadInvestments} />
+          ) : investments.length ? (
             <div className={s.table}>
               <table>
                 <thead>

@@ -40,11 +40,26 @@ export function Heading({ eyebrow, title, children, action }) {
     </div>
   );
 }
-export function Status({ loading, error, retry }) {
+export function Status({ loading, error, retry, skeletonCount = 3, variant = "cards" }) {
   return loading ? (
-    <div className={s.status} role="status">
-      <span className={s.spinner} />
-      Loading your account…
+    <div className={`${s.loadingState} ${s[`loading_${variant}`] || ""}`} role="status" aria-live="polite" aria-busy="true">
+      <span className={s.loadingLabel}>
+        <span className={s.spinner} />
+        Loading your information…
+      </span>
+      <div className={s.skeletonGrid} aria-hidden="true">
+        {Array.from({ length: skeletonCount }, (_, index) => (
+          <article className={s.skeletonCard} key={index}>
+            <div className={s.skeletonTop}>
+              <span className={s.skeletonIcon} />
+              <span className={s.skeletonShort} />
+            </div>
+            <span className={s.skeletonValue} />
+            <span className={s.skeletonLine} />
+            <span className={s.skeletonLineSmall} />
+          </article>
+        ))}
+      </div>
     </div>
   ) : error ? (
     <div className={s.error} role="alert">
