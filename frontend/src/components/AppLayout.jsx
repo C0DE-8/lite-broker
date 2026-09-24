@@ -13,6 +13,7 @@ import {
   FiMenu,
   FiX,
   FiArrowUpRight,
+  FiTrendingUp,
 } from "react-icons/fi";
 import { Brand, Button } from "./UI";
 import { session } from "../api/client";
@@ -29,6 +30,8 @@ const links = [
 const adminLinks = [
   ["/admin", "Admin overview", FiGrid],
   ["/admin/users", "Investors", FiUsers],
+  ["/admin/plans", "Investment plans", FiLayers],
+  ["/admin/investments", "Investments", FiTrendingUp],
   ["/admin/wallet-addresses", "Wallet addresses", FiMapPin],
   ["/admin/approvals", "Review requests", FiCreditCard],
   ["/admin/activity", "Activity logs", FiActivity],

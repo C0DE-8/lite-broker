@@ -20,6 +20,10 @@ import s from "./AdminWorkspace.module.css";
 export default function AdminWorkspace({ section }) {
   return section === "users" ? (
     <Investors />
+  ) : section === "plans" ? (
+    <InvestmentPlans />
+  ) : section === "investments" ? (
+    <InvestmentHistory />
   ) : section === "profile" ? (
     <AdminProfile />
   ) : section === "wallet-addresses" ? (
@@ -443,6 +447,82 @@ function Investors() {
     </>
   );
 }
+
+function InvestmentPlans() {
+  const plans = useApi("/plans?active_only=0", adminApi);
+  const empty = { name: "", roi_percent: "", accuracy_percent: "", price: "", duration_days: "", is_active: "1" };
+  const [editing, setEditing] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+  async function save(e) {
+    e.preventDefault(); setBusy(true); setError(""); setMessage("");
+    const form = e.currentTarget;
+    const data = Object.fromEntries(new FormData(form));
+    data.is_active = data.is_active === "1";
+    try {
+      const result = editing ? await adminApi.put(`/plans/${editing.id}`, data) : await adminApi.post("/plans", data);
+      setMessage(result.message); setEditing(null); form.reset(); plans.reload();
+    } catch (err) { setError(err.message); } finally { setBusy(false); }
+  }
+  return <>
+    <Heading eyebrow="INVESTMENT MANAGEMENT" title="Investment plans.">Create plans for investors and update their terms or availability.</Heading>
+    <div className={s.walletLayout}>
+      <section className={s.panel}>
+        <h3>{editing ? `Edit ${editing.name}` : "Create a plan"}</h3>
+        <form className={s.walletForm} key={editing?.id || "new-plan"} onSubmit={save}>
+          <Field label="Plan name" name="name" defaultValue={editing?.name || ""} required maxLength="120" />
+          <Field label="Description" name="description" as="textarea" rows="3" defaultValue={editing?.description || ""} maxLength="2000" />
+          <Field label="Minimum investment (USD)" name="price" type="number" min="0.01" step="0.01" defaultValue={editing?.price || ""} required />
+          <Field label="ROI (%)" name="roi_percent" type="number" min="0" step="0.01" defaultValue={editing?.roi_percent || ""} required />
+          <Field label="Accuracy indicator (%)" name="accuracy_percent" type="number" min="0" max="100" step="0.01" defaultValue={editing?.accuracy_percent || "0"} required />
+          <Field label="Duration (days)" name="duration_days" type="number" min="1" step="1" defaultValue={editing?.duration_days || ""} required />
+          <Field label="Availability" name="is_active" as="select" defaultValue={editing ? String(editing.is_active ? 1 : 0) : "1"}><option value="1">Active</option><option value="0">Inactive</option></Field>
+          <div className={s.walletActions}><Button type="submit" disabled={busy}>{busy ? "Saving…" : editing ? "Save plan" : "Create plan"}</Button>{editing && <Button type="button" secondary onClick={() => setEditing(null)}>Cancel</Button>}</div>
+        </form>
+        {error && <p className={s.formError} role="alert">{error}</p>}{message && <p className={s.formSuccess} role="status">{message}</p>}
+      </section>
+      <section className={s.panel}>
+        <h3>All plans</h3><Status {...plans} retry={plans.reload} />
+        {plans.data && (plans.data.plans.length ? <div className={s.planList}>{plans.data.plans.map((plan) => <article className={s.planItem} key={plan.id}>
+          <div className={s.walletAsset}><strong>{plan.name}</strong><span>{plan.is_active ? "Active" : "Inactive"}</span></div>
+          <p>{plan.description || "No description"}</p><small>{money(plan.price)} minimum · {plan.roi_percent}% ROI · {plan.duration_days} days</small>
+          <div className={s.walletActions}><button type="button" onClick={() => { setEditing(plan); setMessage(""); setError(""); }}>Edit</button></div>
+        </article>)}</div> : <Empty>No plans are configured yet.</Empty>)}
+      </section>
+    </div>
+  </>;
+}
+
+function InvestmentHistory() {
+  const investments = useApi("/investments", adminApi), users = useApi("/users", adminApi), plans = useApi("/plans?active_only=1", adminApi);
+  const [busy, setBusy] = useState(false), [error, setError] = useState(""), [message, setMessage] = useState("");
+  async function add(e) {
+    e.preventDefault(); setBusy(true); setError(""); setMessage("");
+    const form = e.currentTarget;
+    const body = Object.fromEntries(new FormData(form));
+    try { const result = await adminApi.post("/investments", body); setMessage(result.message); form.reset(); investments.reload(); }
+    catch (err) { setError(err.message); } finally { setBusy(false); }
+  }
+  return <>
+    <Heading eyebrow="INVESTMENT MANAGEMENT" title="Investment history.">Review investor records and add an investment entry to a user account.</Heading>
+    <section className={`${s.panel} ${s.createInvestment}`}><h3>Add investment history</h3>
+      <form className={s.investmentForm} onSubmit={add}>
+        <Field label="Investor" name="user_id" as="select" defaultValue="" required><option value="" disabled>Select investor</option>{(users.data?.users || []).map((user) => <option key={user.id} value={user.id}>{user.full_name} · {user.email}</option>)}</Field>
+        <Field label="Plan" name="plan_id" as="select" defaultValue="" required><option value="" disabled>Select plan</option>{(plans.data?.plans || []).map((plan) => <option key={plan.id} value={plan.id}>{plan.name} · {money(plan.price)} minimum</option>)}</Field>
+        <Field label="Amount (USD)" name="amount" type="number" min="0.01" step="0.01" required />
+        <Field label="Admin note (optional)" name="admin_note" as="textarea" rows="2" maxLength="1000" />
+        <Button type="submit" disabled={busy || !users.data || !plans.data}>{busy ? "Saving…" : "Add investment"}</Button>
+      </form>
+      <p className={s.settingsHint}>This creates an active history record and increases the investor’s investment balance by the same amount.</p>
+      {error && <p className={s.formError} role="alert">{error}</p>}{message && <p className={s.formSuccess} role="status">{message}</p>}
+    </section>
+    <section className={`${s.panel} ${s.historyPanel}`}><h3>Investor investment records</h3><Status {...investments} retry={investments.reload} />
+      {investments.data && (investments.data.investments.length ? <div className={s.table}><table><thead><tr><th>Investor</th><th>Plan</th><th>Amount</th><th>Expected total</th><th>Duration</th><th>Status</th><th>Started</th></tr></thead><tbody>{investments.data.investments.map((item) => <tr key={item.id}><td><strong>{item.full_name}</strong><small>{item.email}</small></td><td>{item.plan_name}</td><td>{money(item.amount)}</td><td>{money(item.expected_total)}</td><td>{item.duration_days} days</td><td>{item.status}</td><td>{item.started_at ? new Date(item.started_at).toLocaleDateString() : "—"}</td></tr>)}</tbody></table></div> : <Empty>No investment records yet.</Empty>)}
+    </section>
+  </>;
+}
+
 function Approvals() {
   const [type, setType] = useState("deposits");
   return (

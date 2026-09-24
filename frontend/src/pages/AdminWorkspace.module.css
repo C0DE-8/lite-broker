@@ -168,6 +168,15 @@
   overflow-wrap: anywhere;
   line-height: 1.6;
 }
+.planList { display: grid; gap: 14px; }
+.planItem { border-top: 1px solid var(--line); padding-top: 15px; }
+.planItem:first-child { border-top: 0; padding-top: 0; }
+.planItem p { margin: 9px 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.planItem > small { color: var(--muted); font-size: 11px; }
+.createInvestment { margin-bottom: 20px; }
+.investmentForm { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; align-items: end; }
+.investmentForm button { justify-self: start; }
+.historyPanel { min-width: 0; }
 .qrPreview {
   display: grid;
   justify-items: center;
@@ -314,6 +323,7 @@
   .walletLayout {
     grid-template-columns: 1fr;
   }
+  .investmentForm { grid-template-columns: 1fr; }
 }
 @media (max-width: 500px) {
   .profileLayout {

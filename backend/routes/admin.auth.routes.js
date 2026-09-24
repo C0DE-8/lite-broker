@@ -1450,9 +1450,11 @@ router.post("/plans", auth, adminOnly, async (req, res) => {
     const accuracy_percent = toNum(req.body.accuracy_percent);
     const price = toNum(req.body.price);
     const duration_days = parseInt(req.body.duration_days, 10);
+    const description = String(req.body.description || "").trim();
     const is_active = req.body.is_active === undefined ? 1 : (req.body.is_active ? 1 : 0);
 
     if (!isNonEmpty(name)) return res.status(400).json({ message: "Plan name is required" });
+    if (description.length > 2000) return res.status(400).json({ message: "Description must be 2,000 characters or fewer" });
     if (!Number.isFinite(roi_percent) || roi_percent < 0) return res.status(400).json({ message: "Invalid roi_percent" });
     if (!Number.isFinite(accuracy_percent) || accuracy_percent < 0 || accuracy_percent > 100) {
       return res.status(400).json({ message: "accuracy_percent must be 0 - 100" });
@@ -1465,11 +1467,11 @@ router.post("/plans", auth, adminOnly, async (req, res) => {
     const [result] = await pool.query(
       `
       INSERT INTO investment_plans
-        (name, roi_percent, accuracy_percent, price, duration_days, is_active, created_at, updated_at)
+        (name, description, roi_percent, accuracy_percent, price, duration_days, is_active, created_at, updated_at)
       VALUES
-        (?, ?, ?, ?, ?, ?, NOW(), NOW())
+        (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
       `,
-      [name, roi_percent, accuracy_percent, price, duration_days, is_active]
+      [name, description || null, roi_percent, accuracy_percent, price, duration_days, is_active]
     );
 
     return res.json({
@@ -1479,6 +1481,36 @@ router.post("/plans", auth, adminOnly, async (req, res) => {
   } catch (err) {
     return res.status(500).json({ message: "Server error", error: String(err) });
   }
+});
+
+// ========================= ADMIN: Record Investment ========================= //
+router.post("/investments", auth, adminOnly, async (req, res) => {
+  const userId = Number(req.body.user_id);
+  const planId = Number(req.body.plan_id);
+  const amount = toNum(req.body.amount);
+  const note = String(req.body.admin_note || "").trim();
+  if (!Number.isSafeInteger(userId) || userId < 1 || !Number.isInteger(planId) || planId < 1 || !Number.isFinite(amount) || amount <= 0 || amount > 999999999999999999 || note.length > 1000) {
+    return res.status(400).json({ message: "Select a user and plan, enter a positive amount, and keep the note under 1,000 characters." });
+  }
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    const [[user]] = await conn.query("SELECT id FROM users WHERE id=? FOR UPDATE", [userId]);
+    const [[plan]] = await conn.query("SELECT id,name,roi_percent,price,duration_days,is_active FROM investment_plans WHERE id=?", [planId]);
+    if (!user) { await conn.rollback(); return res.status(404).json({ message: "Investor not found" }); }
+    if (!plan || !plan.is_active) { await conn.rollback(); return res.status(400).json({ message: "Choose an active investment plan" }); }
+    if (amount < Number(plan.price)) { await conn.rollback(); return res.status(400).json({ message: `Amount must be at least ${Number(plan.price).toFixed(2)} for this plan` }); }
+    const expectedProfit = Number((amount * Number(plan.roi_percent) / 100).toFixed(2));
+    const expectedTotal = Number((amount + expectedProfit).toFixed(2));
+    await conn.query("UPDATE users SET investment_balance=investment_balance+? WHERE id=?", [amount,userId]);
+    const [result] = await conn.query(`INSERT INTO user_investments (user_id,plan_id,amount,roi_percent,expected_profit,expected_total,duration_days,status,started_at,ends_at,admin_note) VALUES (?,?,?,?,?,?,?,'active',NOW(),DATE_ADD(NOW(),INTERVAL ? DAY),?)`, [userId,planId,amount,plan.roi_percent,expectedProfit,expectedTotal,plan.duration_days,plan.duration_days,note || "Added by administrator"]);
+    await conn.commit();
+    return res.status(201).json({ message: "Investment history added", investment_id: result.insertId });
+  } catch (err) {
+    await conn.rollback();
+    console.error("[admin.investments.create] failed:", err);
+    return res.status(500).json({ message: "Unable to add investment history" });
+  } finally { conn.release(); }
 });
 // ========================= ADMIN: Update Plan ========================= //
 router.put("/plans/:id", auth, adminOnly, async (req, res) => {
@@ -1504,6 +1536,13 @@ router.put("/plans/:id", auth, adminOnly, async (req, res) => {
       if (!Number.isFinite(roi_percent) || roi_percent < 0) return res.status(400).json({ message: "Invalid roi_percent" });
       fields.push("roi_percent = ?");
       params.push(roi_percent);
+    }
+
+    if (req.body.description !== undefined) {
+      const description = String(req.body.description || "").trim();
+      if (description.length > 2000) return res.status(400).json({ message: "Description must be 2,000 characters or fewer" });
+      fields.push("description = ?");
+      params.push(description || null);
     }
 
     if (req.body.accuracy_percent !== undefined) {
@@ -1567,7 +1606,7 @@ router.get("/plans", auth, async (req, res) => {
     const [rows] = await pool.query(
       `
       SELECT
-        id, name, roi_percent, accuracy_percent, price, duration_days, is_active,
+        id, name, description, roi_percent, accuracy_percent, price, duration_days, is_active,
         created_at, updated_at
       FROM investment_plans
       ${activeOnly ? "WHERE is_active = 1" : ""}
@@ -1591,7 +1630,7 @@ router.get("/plans/:id", auth, async (req, res) => {
     const [rows] = await pool.query(
       `
       SELECT
-        id, name, roi_percent, accuracy_percent, price, duration_days, is_active,
+        id, name, description, roi_percent, accuracy_percent, price, duration_days, is_active,
         created_at, updated_at
       FROM investment_plans
       WHERE id = ?
