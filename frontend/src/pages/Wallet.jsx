@@ -109,7 +109,10 @@ export default function Wallet() {
             </button>
             <button
               className={tab === "withdraw" ? s.active : ""}
-              onClick={() => setTab("withdraw")}
+              onClick={() => {
+                setTab("withdraw");
+                setShowPinInfo(true);
+              }}
             >
               <FiArrowUpRight />
               Withdraw
